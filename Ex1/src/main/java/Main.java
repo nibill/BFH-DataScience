@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -10,88 +11,119 @@ import java.util.Map.Entry;
 
 public class Main 
 {
-	final static String inputFile = "C:\\Users\\buche\\Documents\\Git\\BFH-DataScience\\Ex1\\src\\main\\resources\\hamlet.txt";
-	final static String outputFile = "C:\\Users\\buche\\Documents\\Git\\BFH-DataScience\\Ex1\\src\\main\\resources\\hamletOutput.txt";
-	
+	// define paths
+	final static String inputFile = new File("src/main/resources/hamlet.txt").getAbsolutePath();
+	final static String outputFile = new File("src/main/resources/hamletOutput.txt").getAbsolutePath();
+
 	public static void main(String[] args) throws IOException
-	{	
+	{			
 		String content = FileReader.readFile(inputFile, Charset.defaultCharset()).toLowerCase();
-		
 		File f = new File(outputFile);
 		
 		// check if file exists
-		if(!f.exists()) { 
-		    f.createNewFile();
+		if(f.exists()) 
+		{ 
+			// empty the file
+			PrintWriter pw = new PrintWriter(outputFile);
+			pw.close();
+		}
+		else
+		{
+			f.createNewFile();
 		}
 		
 		Writer output = new BufferedWriter(new FileWriter(outputFile, true));
 		Map<String, Integer> valueMap = new HashMap<String, Integer>();
 		
-	        String[] keys = content.split("[\\W]+");
-	        String[] uniqueKeys;
-	        int wordCount = 0;
-	        int count = 1;
+		String[] keys = content.split("[\\W]+");
+	    String[] uniqueKeys;
+	    int wordCount = 0;
+	    int count = 1;
 	        
-	        uniqueKeys = getUniqueKeys(keys);
-
-	        for(String key: uniqueKeys)
+	    uniqueKeys = getUniqueKeys(keys);
+	        
+	    // iterate through uniqueKeys
+	    for(String key: uniqueKeys)
+	    {
+	        if(null == key)
 	        {
-	            if(null == key)
+	            break;
+	        }           
+	        for(String s : keys)
+	        {
+	        	// if the searched word appeared already, wordCount + 1
+	            if(key.equals(s))
 	            {
-	                break;
-	            }           
-	            for(String s : keys)
-	            {
-	                if(key.equals(s))
-	                {
-	                	wordCount++;
-	                }               
-	            }
+	            	wordCount++;
+	            }               
+	        }
 	            
-	            valueMap.put(key, wordCount);
-	            wordCount=0;
-	        }
+	        // write the word with its counter into a map
+	        valueMap.put(key, wordCount);
+	            
+	        // reset wordCount for next word
+	        wordCount = 0;
+	    }
 	        
-	        valueMap = MapSorter.SortByValues(valueMap);
-	        
-	        for(Entry<String, Integer> entry : valueMap.entrySet())
-	        {
-	        	String word = entry.getKey();
-	        	Integer countedWords = entry.getValue();
+	    // sort map descending by value
+	    valueMap = MapSorter.SortByValues(valueMap);
+	    
+	    // iterate through map in order to write its values into the text file
+	    for(Entry<String, Integer> entry : valueMap.entrySet())
+	    {
+	    	// get keys/values
+	        String word = entry.getKey();
+	        Integer countedWords = entry.getValue();
 	        	
-	        	output.append(count + " " + word + " " + countedWords + "\n");
-	        	count ++;
-	        }
+	        // output to the text file
+	        output.append(count + " " + word + " " + countedWords + "\n");
+
+	        // index + 1
+	        count ++;
+	    }
 	        
-	        output.close();
-	        System.out.println("Finished!");
+	    // close writer stream
+	    output.close();
+	        
+	    // console message to inform user the operation finished
+	    System.out.println("Finished!");
 	}
 	
-	private static String[] getUniqueKeys(String[] keys)
+	/**
+	 * Method to retrieve all unique words
+	 * @param words every word appearing in the text
+	 * @return array with every unique word appearing in the text
+	 */
+	private static String[] getUniqueKeys(String[] words)
 	{
-		String[] uniqueKeys = new String[keys.length];
+		// define array
+		String[] uniqueKeys = new String[words.length];
 
-		uniqueKeys[0] = keys[0];
+		uniqueKeys[0] = words[0];
 	    int uniqueKeyIndex = 1;
 	    boolean keyAlreadyExists = false;
 
-	    for(int i=1; i<keys.length ; i++)
+	    // iterate through the words array
+	    for(int i=1; i<words.length ; i++)
 	    {
 	    	for(int j=0; j<=uniqueKeyIndex; j++)
 	        {
-	            if(keys[i].equals(uniqueKeys[j]))
+	    		// check if searched word exists already
+	            if(words[i].equals(uniqueKeys[j]))
 	             {
 	                 keyAlreadyExists = true;
 	             }
 	         }           
 
-	         if(!keyAlreadyExists)
-	         {
-	             uniqueKeys[uniqueKeyIndex] = keys[i];
-	             uniqueKeyIndex++;               
-	         }
-	         keyAlreadyExists = false;
-	     }       
-	     return uniqueKeys;
+	    	// check if key exists already
+	        if(!keyAlreadyExists)
+	        {
+	        	// set unique key to the searched word
+	        	uniqueKeys[uniqueKeyIndex] = words[i];
+	        	uniqueKeyIndex++;               
+	       }
+	       keyAlreadyExists = false;
+	    }       
+	    return uniqueKeys;
 	 }
 }
